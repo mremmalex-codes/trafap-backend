@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import argon2 from "argon2";
-import { Register } from "./auth.types";
+import { Login, Register } from "./auth.types";
 import prisma from "../../utils/prisma";
 import email_validator from "../../utils/validators/email";
+import { generate_access_token } from "../../utils/jsonwebtoken";
 
 /** this class groups all the http handler and other auth functions */
 export class AuthController {
@@ -76,14 +77,71 @@ export class AuthController {
         } catch (error) {
             console.log(error);
             return res.status(200).json({
-                message: "hello",
+                message: "Internal Server Error",
+                statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+                error: true,
+                data: null,
             });
         }
     }
 
+    /** thhis haanlder handles the login endpoint
+     *   this recieves a @username and @password as the @parameter
+     *   and returns a authorization token as string
+     * */
     static async loginHandler(req: Request, res: Response): Promise<Response> {
-        return res.status(200).json({
-            message: "hello",
-        });
+        const { username, password }: Login = req.body;
+        if (!username) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "Username Field Is Required",
+                statusCode: StatusCodes.BAD_REQUEST,
+                error: true,
+                data: null,
+            });
+        }
+        try {
+            const user = await prisma.user.findUnique({
+                where: {
+                    username,
+                },
+            });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    message: "no user with this username",
+                    statusCode: StatusCodes.NOT_FOUND,
+                    error: true,
+                    data: null,
+                });
+            }
+            const is_password_matched = argon2.verify(user.password, password);
+            if (!is_password_matched) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    message: "Incorrect password",
+                    statusCode: StatusCodes.BAD_REQUEST,
+                    error: true,
+                    data: null,
+                });
+            }
+            const token: string = generate_access_token({
+                username: user.username,
+                userid: user.id,
+            });
+            return res.status(StatusCodes.OK).json({
+                message: "login successful",
+                statusCode: StatusCodes.OK,
+                error: false,
+                data: {
+                    access_token: token,
+                },
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(200).json({
+                message: "Internal Server Error",
+                statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+                error: true,
+                data: null,
+            });
+        }
     }
 }

@@ -1,0 +1,5 @@
+ Username:    postgres
+  Password:    5ad03426267d5f38d7de24c9f697cf76fe0b6ffc68e6b352
+  Hostname:    trefapdb.internal
+  Proxy Port:  5432
+  Postgres Port: 5433

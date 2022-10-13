@@ -2,11 +2,11 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
-const secret_key = process.env.SECRET_KEY!;
+const secret_key: string = process.env.SECRET_KEY as string;
 
 type TokenData = {
     username: string;
-    userid: string;
+    userid: number;
 };
 
 const generate_access_token = (data: TokenData): string => {
