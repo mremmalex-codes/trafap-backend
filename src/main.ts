@@ -33,6 +33,7 @@ const options = {
     ],
 };
 
+
 app.use("/api/auth", auth);
 app.use("/api/traffic", traffic);
 
